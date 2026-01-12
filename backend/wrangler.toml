@@ -23,7 +23,7 @@ ADMIN_TOKEN_EXPIRY_DAYS = "7"
 [[d1_databases]]
 binding = "DB"
 database_name = "cloudpaste-db"
-database_id = "xxxxxxxxxxxxxxxxx"
+database_id = "97ed86f1-d03e-4740-818c-8a4b6c9c53b3"
 
 # Cloudflare Workflows 绑定
 # 用于异步任务作业的持久化执行

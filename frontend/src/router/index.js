@@ -45,6 +45,7 @@ const createOfflineAwareImport = (importFn, componentName = "页面") => {
 const HomeView = createOfflineAwareImport(() => import("../modules/paste/editor/MarkdownEditorView.vue"), "首页");
 const UploadView = createOfflineAwareImport(() => import("../modules/upload/public/UploadView.vue"), "文件上传页面");
 const PasteView = createOfflineAwareImport(() => import("../modules/paste/public/PasteView.vue"), "文本分享页面");
+const DocView = createOfflineAwareImport(() => import("../modules/paste/public/DocView.vue"), "简洁文档预览");
 const FileView = createOfflineAwareImport(() => import("../modules/fileshare/public/FileView.vue"), "文件预览页面");
 const MountExplorerView = createOfflineAwareImport(() => import("../modules/fs/MountExplorerView.vue"), "挂载浏览器");
 
@@ -275,6 +276,18 @@ const routes = [
       originalPage: "paste-view",
     },
   },
+  // 简洁文档预览 - 只有标题和内容，无导航和底部
+  {
+    path: "/view/:slug",
+    name: "DocView",
+    component: DocView,
+    props: true,
+    meta: {
+      title: "文档 - CloudPaste",
+      originalPage: "doc-view",
+      minimalLayout: true,
+    },
+  },
   {
     path: "/file/:slug",
     name: "FileView",
@@ -421,7 +434,7 @@ const dispatchPublicEntryDisabledMessage = () => {
         },
       })
     );
-  } catch {}
+  } catch { }
 };
 
 // 获取用户默认路由

@@ -41,6 +41,26 @@ const canShowHomeEntry = computed(() => !siteConfigStore.isInitialized || siteCo
 const canShowUploadEntry = computed(() => !siteConfigStore.isInitialized || siteConfigStore.siteUploadPageEnabled);
 const canShowMountEntry = computed(() => !siteConfigStore.isInitialized || siteConfigStore.siteMountExplorerEnabled);
 
+// 是否显示导航链接：在预览页面（/paste/*, /file/*）默认隐藏，只有已登录才显示
+const shouldShowNavLinks = computed(() => {
+  // 直接检查路径，避免 route.meta 初始化延迟的问题
+  const path = route.path || "";
+  const isPreviewPage = path.startsWith("/paste/") || path.startsWith("/file/");
+  // 预览页面：只有明确登录后才显示导航链接
+  if (isPreviewPage) {
+    // 必须已初始化且已认证才显示
+    return authStore.initialized && authStore.isAuthenticated;
+  }
+  return true;
+});
+
+// 是否使用简洁布局 - 使用 window.location.pathname 确保页面加载时立即生效
+const isMinimalLayout = computed(() => {
+  // 优先使用 window.location.pathname（立即可用），然后是 route.meta
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  return pathname.startsWith('/view/') || route.meta?.minimalLayout === true;
+});
+
 // 公告入口（全站）：只有“启用 + 有内容”才显示
 const announcementModalRef = ref(null);
 const canShowAnnouncementEntry = computed(() => {
@@ -140,14 +160,14 @@ const isDev = import.meta.env.DEV;
 
 <template>
   <div :class="['app-container min-h-[100dvh] transition-colors duration-200', isDarkMode ? 'bg-custom-bg-900 text-custom-text-dark' : 'bg-custom-bg-50 text-custom-text']">
-    <header :class="['sticky top-0 z-50 shadow-sm transition-colors', isDarkMode ? 'bg-custom-surface-dark' : 'bg-custom-surface']">
+    <header v-if="!isMinimalLayout" :class="['sticky top-0 z-50 shadow-sm transition-colors', isDarkMode ? 'bg-custom-surface-dark' : 'bg-custom-surface']">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex">
             <div class="flex-shrink-0 flex items-center">
               <h1 class="text-xl font-bold">{{ siteConfigStore.siteTitle || $t("app.title") }}</h1>
             </div>
-            <nav class="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <nav v-if="shouldShowNavLinks" class="hidden sm:ml-6 sm:flex sm:space-x-8">
               <router-link
                 to="/"
                 v-if="canShowHomeEntry"
@@ -195,6 +215,7 @@ const isDev = import.meta.env.DEV;
           </div>
           <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-2">
             <a
+              v-if="shouldShowNavLinks"
               :href="githubUrl"
               target="_blank"
               rel="noopener noreferrer"
@@ -228,7 +249,7 @@ const isDev = import.meta.env.DEV;
               ></span>
             </button>
 
-            <LanguageSwitcher :darkMode="isDarkMode" />
+            <LanguageSwitcher v-if="shouldShowNavLinks" :darkMode="isDarkMode" />
 
             <button
               type="button"
@@ -248,6 +269,7 @@ const isDev = import.meta.env.DEV;
           <!-- 移动端菜单按钮 -->
           <div class="flex items-center sm:hidden">
             <a
+              v-if="shouldShowNavLinks"
               :href="githubUrl"
               target="_blank"
               rel="noopener noreferrer"
@@ -281,7 +303,7 @@ const isDev = import.meta.env.DEV;
               ></span>
             </button>
 
-            <LanguageSwitcher :darkMode="isDarkMode" class="mr-2" />
+            <LanguageSwitcher v-if="shouldShowNavLinks" :darkMode="isDarkMode" class="mr-2" />
 
             <button
               type="button"
@@ -298,6 +320,7 @@ const isDev = import.meta.env.DEV;
               <IconSun v-else size="md" aria-hidden="true" />
             </button>
             <button
+              v-if="shouldShowNavLinks"
               type="button"
               @click="toggleMobileMenu"
               :class="[
@@ -323,7 +346,7 @@ const isDev = import.meta.env.DEV;
       </div>
 
       <!-- 移动端菜单面板 -->
-      <div class="sm:hidden overflow-hidden transition-all duration-300 ease-in-out" :class="[isMobileMenuOpen ? 'max-h-80' : 'max-h-0']">
+      <div v-if="shouldShowNavLinks" class="sm:hidden overflow-hidden transition-all duration-300 ease-in-out" :class="[isMobileMenuOpen ? 'max-h-80' : 'max-h-0']">
         <div :class="['py-3 border-t transition-colors', isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
           <router-link
             to="/"
@@ -400,7 +423,7 @@ const isDev = import.meta.env.DEV;
       <router-view :dark-mode="isDarkMode" class="transition-opacity duration-300 flex-1 flex flex-col" :class="{ 'opacity-0': transitioning }" />
     </main>
 
-    <footer v-if="shouldShowFooter" :class="['border-t transition-colors mt-auto', isDarkMode ? 'bg-custom-surface-dark border-gray-700' : 'bg-custom-surface border-gray-200']">
+    <footer v-if="shouldShowFooter && !isMinimalLayout" :class="['border-t transition-colors mt-auto', isDarkMode ? 'bg-custom-surface-dark border-gray-700' : 'bg-custom-surface border-gray-200']">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-6">
         <FooterMarkdownRenderer :content="siteConfigStore.siteFooterMarkdown" :dark-mode="isDarkMode" />
       </div>

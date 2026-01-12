@@ -39,6 +39,11 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  // 简洁模式 - 隐藏面包屑、元信息、工具栏等
+  minimalMode: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const router = useRouter();
@@ -585,8 +590,8 @@ onBeforeUnmount(() => {
 <template>
   <div class="paste-view max-w-6xl mx-auto px-3 sm:px-6 flex-1 flex flex-col pt-6 sm:pt-8">
     <div class="mb-6">
-      <!-- 将原来的大标题替换为更简洁的面包屑样式导航 -->
-      <div class="py-3 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 mb-4">
+      <!-- 将原来的大标题替换为更简洁的面包屑样式导航 - 仅登录用户可见，简洁模式隐藏 -->
+      <div v-if="!minimalMode && authStore.isAuthenticated" class="py-3 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 mb-4">
         <a href="/" class="hover:text-primary-600 dark:hover:text-primary-400">首页</a>
         <span class="mx-2">/</span>
         <span class="text-gray-700 dark:text-gray-300">文本分享</span>
@@ -675,8 +680,8 @@ onBeforeUnmount(() => {
 
       <!-- 文本内容显示区域 - 主要内容容器 -->
       <div v-if="paste && !needPassword && !(error && !error.includes('成功') && !needPassword)" class="mt-6">
-        <!-- 元信息显示区域 - 显示过期时间和剩余查看次数 -->
-        <div class="mb-6 p-5 border rounded-lg" :class="darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
+        <!-- 元信息显示区域 - 显示过期时间和剩余查看次数 - 仅登录用户可见，简洁模式隐藏 -->
+        <div v-if="!minimalMode && authStore.isAuthenticated" class="mb-6 p-5 border rounded-lg" :class="darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
           <div class="grid grid-cols-1 gap-4 text-sm">
             <div v-if="paste.expires_at">
               <span :class="darkMode ? 'text-gray-400' : 'text-gray-500'">过期时间:</span>
@@ -698,10 +703,10 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <!-- 视图模式切换和操作按钮区域 -->
-        <div class="mb-4 flex items-center justify-between flex-wrap gap-2">
-          <!-- 视图模式切换按钮组 - 在编辑模式下隐藏 -->
-          <div v-if="viewMode !== 'edit'" class="flex border rounded-md overflow-hidden" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
+        <!-- 视图模式切换和操作按钮区域 - 仅登录用户可见，简洁模式隐藏 -->
+        <div v-if="!minimalMode && authStore.isAuthenticated" class="mb-4 flex items-center justify-between flex-wrap gap-2">
+          <!-- 视图模式切换按钮组 - 在编辑模式下隐藏，未登录用户隐藏 -->
+          <div v-if="viewMode !== 'edit' && authStore.isAuthenticated" class="flex border rounded-md overflow-hidden" :class="darkMode ? 'border-gray-700' : 'border-gray-200'">
             <button
               @click="switchViewMode('preview')"
               class="px-3 py-1.5 text-sm font-medium"
@@ -767,8 +772,8 @@ onBeforeUnmount(() => {
           <!-- 编辑模式下显示固定标题 -->
           <div v-else class="text-sm font-medium" :class="darkMode ? 'text-gray-300' : 'text-gray-700'">编辑模式 - 请使用下方按钮保存或取消</div>
 
-          <!-- 管理员编辑按钮和复制按钮 - 在编辑模式下隐藏 -->
-          <div v-if="viewMode !== 'edit'" class="flex items-center gap-2">
+          <!-- 管理员编辑按钮和复制按钮 - 在编辑模式下隐藏，未登录用户隐藏 -->
+          <div v-if="viewMode !== 'edit' && authStore.isAuthenticated" class="flex items-center gap-2">
             <!-- 复制内容按钮 -->
             <button
               v-if="paste && paste.content"
